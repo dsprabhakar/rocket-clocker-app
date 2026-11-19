@@ -9,6 +9,7 @@ interface AuthState {
   loading: boolean
   setUser: (user: Profile | null) => void
   login: (email: string) => Promise<{ error: string | null }>
+  demoLogin: (email: string, password: string) => Promise<{ error: string | null }>
   verifyOtp: (email: string, token: string) => Promise<{ error: string | null }>
   logout: () => Promise<void>
   fetchProfile: () => Promise<void>
@@ -29,6 +30,19 @@ export const useAuthStore = create<AuthState>()(
         const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: redirectTo } })
         set({ loading: false })
         if (error) return { error: error.message }
+        return { error: null }
+      },
+
+      demoLogin: async (email: string, password: string) => {
+        set({ loading: true })
+        const { error } = await supabase.auth.signInWithPassword({ email, password })
+        if (error) {
+          set({ loading: false })
+          return { error: error.message }
+        }
+        set({ session: true })
+        await get().fetchProfile()
+        set({ loading: false })
         return { error: null }
       },
 
